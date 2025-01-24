@@ -1,1 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Dodge Master</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #1e3c72, #1a508b);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 2px solid #444;
+            background: rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 600px;
+            height: 900px;
+        }
+        .ui {
+            display: flex;
+            justify-content: space-between;
+            width: 600px;
+        }
+        .score, .upgrades {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .menu button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .menu button:hover {
+            background: #555;
+        }
+        .qr-code {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+        }
+        .footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+        }
+        .footer a {
+            color: #00bfff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="ui">
+        <div class="score">
+            <div>High Score: <span id="highScore">0</span></div>
+            <div>Money: $<span id="money">0</span></div>
+            <div>Score: <span id="score">0</span></div>
+        </div>
+    </div>
+    <div class="menu" id="menu">
+        <h1>Emoji Dodge Master</h1>
+        <p>Use Left and Right Arrow Keys or A/D to move.</p>
+        <p>Avoid 🔥 and collect ⭐ to earn points!</p>
+        <button id="startButton">Start Game</button>
+        <p id="deathMessage" style="display:none">Game Over! Try Again!</p>
+    </div>
+    <canvas id="gameCanvas" width="600" height="900"></canvas>
+    <a href="https://sites.google.com/view/staticquasar931" target="_blank">
+        <img src="https://res.cloudinary.com/dcsrqennd/image/upload/v1733694622/frame_1_vmv9y3.png" alt="QR Code" class="qr-code">
+    </a>
+    <div class="footer">
+        <p>Made by <a href="https://sites.google.com/view/staticquasar931" target="_blank">Static</a></p>
+    </div>
 
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        const highScoreDisplay = document.getElementById("highScore");
+        const moneyDisplay = document.getElementById("money");
+        const menu = document.getElementById("menu");
+        const startButton = document.getElementById("startButton");
+        const deathMessage = document.getElementById("deathMessage");
+
+        const player = {
+            x: canvas.width / 2 - 20,
+            y: canvas.height - 60,
+            width: 40,
+            height: 40,
+            emoji: "😎",
+            speed: 5
+        };
+
+        let obstacles = [];
+        let stars = [];
+        let score = 0;
+        let highScore = 0;
+        let money = 0;
+        let gameOver = false;
+        let gamePaused = false;
+        let keys = {};
+
+        function resetGame() {
+            player.x = canvas.width / 2 - 20;
+            obstacles = [];
+            stars = [];
+            score = 0;
+            gameOver = false;
+            scoreDisplay.textContent = score;
+            deathMessage.style.display = "none";
+        }
+
+        function createObstacle() {
+            const x = Math.random() * (canvas.width - 40);
+            obstacles.push({ x, y: -40, width: 40, height: 40, emoji: "🔥" });
+        }
+
+        function createStar() {
+            const x = Math.random() * (canvas.width - 40);
+            stars.push({ x, y: -40, width: 40, height: 40, emoji: "⭐" });
+        }
+
+        function drawPlayer() {
+            ctx.font = "30px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(player.emoji, player.x + player.width / 2, player.y + player.height / 2);
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.font = "30px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(obstacle.emoji, obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2);
+            });
+        }
+
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.font = "30px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(star.emoji, star.x + star.width / 2, star.y + star.height / 2);
+            });
+        }
+
+        function moveObstacles() {
+            obstacles.forEach(obstacle => obstacle.y += 3);
+        }
+
+        function moveStars() {
+            stars.forEach(star => star.y += 2);
+        }
+
+        function checkCollisions() {
+            obstacles.forEach((obstacle, index) => {
+                if (
+                    player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y
+                ) {
+                    gameOver = true;
+                    deathMessage.style.display = "block";
+                }
+
+                if (obstacle.y > canvas.height) {
+                    obstacles.splice(index, 1);
+                }
+            });
+
+            stars.forEach((star, index) => {
+                if (
+                    player.x < star.x + star.width &&
+                    player.x + player.width > star.x &&
+                    player.y < star.y + star.height &&
+                    player.y + player.height > star.y
+                ) {
+                    score += 10;
+                    money += 5;
+                    scoreDisplay.textContent = score;
+                    moneyDisplay.textContent = money;
+                    stars.splice(index, 1);
+                }
+
+                if (star.y > canvas.height) {
+                    stars.splice(index, 1);
+                }
+            });
+        }
+
+        function gameLoop() {
+            if (gamePaused || gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawPlayer();
+            drawObstacles();
+            drawStars();
+
+            moveObstacles();
+            moveStars();
+            checkCollisions();
+
+            if (gameOver) {
+                highScore = Math.max(highScore, score);
+                highScoreDisplay.textContent = highScore;
+                menu.style.display = "flex";
+                return;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener("keydown", e => {
+            keys[e.key] = true;
+            if (e.key === "Escape") {
+                gamePaused = !gamePaused;
+                menu.style.display = gamePaused ? "flex" : "none";
+            }
+        });
+
+        document.addEventListener("keyup", e => keys[e.key] = false);
+
+        function movePlayer() {
+            if (keys["ArrowLeft"] || keys["a"]) player.x = Math.max(0, player.x - player.speed);
+            if (keys["ArrowRight"] || keys["d"]) player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+        }
+
+        startButton.addEventListener("click", () => {
+            menu.style.display = "none";
+            resetGame();
+            gamePaused = false;
+            gameLoop();
+        });
+
+        document.addEventListener("keydown", e => {
+            if ([" ", "Enter"].includes(e.key) && gameOver) {
+                resetGame();
+                menu.style.display = "none";
+                gamePaused = false;
+                gameLoop();
+            }
+        });
+
+        setInterval(() => {
+            if (!gamePaused && !gameOver) {
+                createObstacle();
+                createStar();
+            }
+        }, 1000);
+
+        setInterval(movePlayer, 16);
+    </script>
+</body>
+</html>
