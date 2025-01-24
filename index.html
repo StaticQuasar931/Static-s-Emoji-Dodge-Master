@@ -20,13 +20,16 @@
             border: 2px solid #444;
             background: rgba(0, 0, 0, 0.1);
             margin-top: 20px;
-            width: 600px;
-            height: 900px;
+            width: 90vw;
+            max-width: 600px;
+            height: 150vw;
+            max-height: 900px;
         }
         .ui {
             display: flex;
             justify-content: space-between;
-            width: 600px;
+            width: 90vw;
+            max-width: 600px;
             margin-top: 10px;
         }
         .score, .upgrades {
@@ -34,21 +37,28 @@
             padding: 10px;
             border-radius: 5px;
             text-align: center;
+            flex: 1;
+            margin: 0 5px;
         }
-        .menu {
+        .menu, .shop {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: none;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        .menu button {
+        .menu.active, .shop.active {
+            display: flex;
+        }
+        .menu button, .shop button {
             margin: 10px;
             padding: 10px 20px;
             font-size: 18px;
@@ -58,7 +68,7 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .menu button:hover {
+        .menu button:hover, .shop button:hover {
             background: #555;
         }
         .qr-code {
@@ -80,6 +90,31 @@
             color: #00bfff;
             text-decoration: none;
         }
+        .shop-item {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shop-item button {
+            padding: 5px 10px;
+            font-size: 16px;
+        }
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .ui {
+                flex-direction: column;
+                align-items: center;
+            }
+            .score, .upgrades {
+                margin: 5px 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -90,20 +125,53 @@
             <div>Score: <span id="score">0</span></div>
         </div>
     </div>
+
+    <!-- Shop Interface -->
+    <div class="shop" id="shop">
+        <h1>Shop</h1>
+        <div class="shop-item">
+            <span>Increase Speed ($50)</span>
+            <button id="upgradeSpeed">Buy</button>
+        </div>
+        <div class="shop-item">
+            <span>Shield (Temporary)</span>
+            <button id="buyShield">Buy ($100)</button>
+        </div>
+        <button id="closeShop">Close Shop</button>
+    </div>
+
+    <!-- Menu Interface -->
     <div class="menu" id="menu">
         <h1>Emoji Dodge Master</h1>
         <p>Use Left and Right Arrow Keys or A/D to move.</p>
         <p>Avoid 🔥 and collect ⭐ to earn points!</p>
         <button id="startButton">Start Game</button>
+        <button id="openShop">Shop</button>
         <p id="deathMessage" style="display:none">Game Over! Try Again!</p>
     </div>
+
     <canvas id="gameCanvas" width="600" height="900"></canvas>
+
     <a href="https://sites.google.com/view/staticquasar931" target="_blank">
         <img src="https://res.cloudinary.com/dcsrqennd/image/upload/v1733694622/frame_1_vmv9y3.png" alt="QR Code" class="qr-code">
     </a>
     <div class="footer">
         <p>Made by <a href="https://sites.google.com/view/staticquasar931" target="_blank">Static</a></p>
     </div>
+
+    <!-- Audio Elements -->
+    <audio id="bgMusic" loop>
+        <source src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAw=" type="audio/mp3">
+        <!-- Placeholder: Insert actual base64 audio data here -->
+    </audio>
+    <audio id="collectSound">
+        <source src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAw=" type="audio/mp3">
+        <!-- Placeholder: Insert actual base64 audio data here -->
+    </audio>
+    <audio id="collisionSound">
+        <source src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAw=" type="audio/mp3">
+        <!-- Placeholder: Insert actual base64 audio data here -->
+    </audio>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -112,12 +180,25 @@
         const highScoreDisplay = document.getElementById("highScore");
         const moneyDisplay = document.getElementById("money");
         const menu = document.getElementById("menu");
+        const shop = document.getElementById("shop");
         const startButton = document.getElementById("startButton");
+        const openShopButton = document.getElementById("openShop");
+        const closeShopButton = document.getElementById("closeShop");
         const deathMessage = document.getElementById("deathMessage");
+        const upgradeSpeedButton = document.getElementById("upgradeSpeed");
+        const buyShieldButton = document.getElementById("buyShield");
 
-        // Initialize highScore from localStorage
+        // Audio Elements
+        const bgMusic = document.getElementById("bgMusic");
+        const collectSound = document.getElementById("collectSound");
+        const collisionSound = document.getElementById("collisionSound");
+
+        // Initialize highScore and money from localStorage
         let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
         highScoreDisplay.textContent = highScore;
+
+        let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 0;
+        moneyDisplay.textContent = money;
 
         const player = {
             x: canvas.width / 2 - 20,
@@ -125,39 +206,55 @@
             width: 40,
             height: 40,
             emoji: "😎",
-            speed: 5
+            speed: 5,
+            shield: false,
+            shieldDuration: 0
         };
 
         let obstacles = [];
         let stars = [];
-        let score = 0;
-        let money = 0;
+        let score = localStorage.getItem('score') ? parseInt(localStorage.getItem('score')) : 0;
+        scoreDisplay.textContent = score;
         let gameOver = false;
         let gamePaused = false;
         let keys = {};
 
         let spawnInterval;
+        let animationFrameId;
+
+        // Upgrades
+        let speedUpgrade = localStorage.getItem('speedUpgrade') ? parseInt(localStorage.getItem('speedUpgrade')) : 0;
+
+        // Function to save progress
+        function saveProgress() {
+            localStorage.setItem('highScore', highScore);
+            localStorage.setItem('money', money);
+            localStorage.setItem('score', score);
+            localStorage.setItem('speedUpgrade', speedUpgrade);
+        }
 
         function resetGame() {
             player.x = canvas.width / 2 - 20;
             obstacles = [];
             stars = [];
             score = 0;
-            money = 0;
             gameOver = false;
+            player.shield = false;
+            player.shieldDuration = 0;
             scoreDisplay.textContent = score;
-            moneyDisplay.textContent = money;
             deathMessage.style.display = "none";
+            saveProgress();
         }
 
         function createObstacle() {
             const x = Math.random() * (canvas.width - 40);
-            obstacles.push({ x, y: -40, width: 40, height: 40, emoji: "🔥" });
+            const speed = 3 + speedUpgrade;
+            obstacles.push({ x, y: -40, width: 40, height: 40, emoji: "🔥", speed });
         }
 
         function createStar() {
             const x = Math.random() * (canvas.width - 40);
-            stars.push({ x, y: -40, width: 40, height: 40, emoji: "⭐" });
+            stars.push({ x, y: -40, width: 40, height: 40, emoji: "⭐", speed: 2 });
         }
 
         function drawPlayer() {
@@ -165,6 +262,13 @@
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(player.emoji, player.x + player.width / 2, player.y + player.height / 2);
+            if (player.shield) {
+                ctx.beginPath();
+                ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width, 0, Math.PI * 2);
+                ctx.strokeStyle = "cyan";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
         }
 
         function drawObstacles() {
@@ -186,11 +290,11 @@
         }
 
         function moveObstacles() {
-            obstacles.forEach(obstacle => obstacle.y += 3);
+            obstacles.forEach(obstacle => obstacle.y += obstacle.speed);
         }
 
         function moveStars() {
-            stars.forEach(star => star.y += 2);
+            stars.forEach(star => star.y += star.speed);
         }
 
         function checkCollisions() {
@@ -201,8 +305,15 @@
                     player.y < obstacle.y + obstacle.height &&
                     player.y + player.height > obstacle.y
                 ) {
-                    gameOver = true;
-                    deathMessage.style.display = "block";
+                    if (player.shield) {
+                        // Destroy the obstacle instead of game over
+                        obstacles.splice(index, 1);
+                        // Optionally, add a sound or effect
+                    } else {
+                        collisionSound.play();
+                        gameOver = true;
+                        deathMessage.style.display = "block";
+                    }
                 }
 
                 if (obstacle.y > canvas.height) {
@@ -217,6 +328,7 @@
                     player.y < star.y + star.height &&
                     player.y + player.height > star.y
                 ) {
+                    collectSound.play();
                     score += 10;
                     money += 5;
                     scoreDisplay.textContent = score;
@@ -235,6 +347,20 @@
             if (keys["arrowright"] || keys["d"]) player.x = Math.min(canvas.width - player.width, player.x + player.speed);
         }
 
+        function applyShield() {
+            player.shield = true;
+            player.shieldDuration = 300; // Frames (approx 5 seconds at 60fps)
+        }
+
+        function handleShields() {
+            if (player.shield) {
+                player.shieldDuration--;
+                if (player.shieldDuration <= 0) {
+                    player.shield = false;
+                }
+            }
+        }
+
         function gameLoop() {
             if (gamePaused || gameOver) return;
 
@@ -249,6 +375,7 @@
             moveObstacles();
             moveStars();
             checkCollisions();
+            handleShields();
 
             if (gameOver) {
                 if (score > highScore) {
@@ -257,7 +384,9 @@
                     highScoreDisplay.textContent = highScore;
                 }
                 menu.style.display = "flex";
+                bgMusic.pause();
                 stopSpawning();
+                saveProgress();
                 return;
             }
 
@@ -282,6 +411,7 @@
                 menu.innerHTML = `
                     <h1>Paused</h1>
                     <button id="resumeButton">Resume Game</button>
+                    <button id="openShop">Shop</button>
                 `;
                 const resumeButton = document.getElementById("resumeButton");
                 resumeButton.addEventListener("click", () => {
@@ -296,6 +426,7 @@
                     <p>Use Left and Right Arrow Keys or A/D to move.</p>
                     <p>Avoid 🔥 and collect ⭐ to earn points!</p>
                     <button id="startButton">Start Game</button>
+                    <button id="openShop">Shop</button>
                     <p id="deathMessage" style="display:none">Game Over! Try Again!</p>
                 `;
                 const newStartButton = document.getElementById("startButton");
@@ -305,6 +436,7 @@
                     gamePaused = false;
                     gameLoop();
                     startSpawning();
+                    bgMusic.play();
                 });
             }
             menu.style.display = "flex";
@@ -313,6 +445,48 @@
         // Initial menu display
         showMenu(false);
 
+        // Event Listeners for Opening and Closing Shop
+        openShopButton.addEventListener("click", () => {
+            menu.style.display = "none";
+            shop.classList.add("active");
+        });
+
+        document.getElementById("openShop")?.addEventListener("click", () => {
+            menu.style.display = "none";
+            shop.classList.add("active");
+        });
+
+        closeShopButton.addEventListener("click", () => {
+            shop.classList.remove("active");
+            menu.style.display = "flex";
+        });
+
+        // Upgrade Purchase Handlers
+        upgradeSpeedButton.addEventListener("click", () => {
+            if (money >= 50) {
+                money -= 50;
+                moneyDisplay.textContent = money;
+                player.speed += 1;
+                speedUpgrade += 1;
+                localStorage.setItem('speedUpgrade', speedUpgrade);
+                saveProgress();
+            } else {
+                alert("Not enough money!");
+            }
+        });
+
+        buyShieldButton.addEventListener("click", () => {
+            if (money >= 100) {
+                money -= 100;
+                moneyDisplay.textContent = money;
+                applyShield();
+                saveProgress();
+            } else {
+                alert("Not enough money!");
+            }
+        });
+
+        // Keyboard Controls
         document.addEventListener("keydown", e => {
             const key = e.key.toLowerCase();
             keys[key] = true;
@@ -321,10 +495,12 @@
                 if (gamePaused) {
                     showMenu(true);
                     stopSpawning();
+                    bgMusic.pause();
                 } else {
                     menu.style.display = "none";
                     gameLoop();
                     startSpawning();
+                    bgMusic.play();
                 }
             }
         });
@@ -342,8 +518,70 @@
                 gamePaused = false;
                 gameLoop();
                 startSpawning();
+                bgMusic.play();
             }
         });
+
+        // Shop buttons within menu
+        menu.addEventListener("click", (e) => {
+            if (e.target.id === "openShop") {
+                menu.style.display = "none";
+                shop.classList.add("active");
+            }
+        });
+
+        // Start background music when game starts
+        startButton?.addEventListener("click", () => {
+            bgMusic.play();
+        });
+
+        // Initialize Background Music
+        bgMusic.volume = 0.3; // Adjust volume as needed
+        bgMusic.play();
+
+        // Responsive Canvas
+        function resizeCanvas() {
+            const aspectRatio = canvas.width / canvas.height;
+            let newWidth = window.innerWidth * 0.9;
+            let newHeight = newWidth / aspectRatio;
+            if (newHeight > window.innerHeight * 0.9) {
+                newHeight = window.innerHeight * 0.9;
+                newWidth = newHeight * aspectRatio;
+            }
+            canvas.style.width = `${newWidth}px`;
+            canvas.style.height = `${newHeight}px`;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Touch Controls for Mobile Devices
+        let touchStartX = null;
+
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!touchStartX) return;
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - touchStartX;
+            if (deltaX > 20) {
+                keys["arrowright"] = true;
+                keys["arrowleft"] = false;
+            } else if (deltaX < -20) {
+                keys["arrowleft"] = true;
+                keys["arrowright"] = false;
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            keys["arrowleft"] = false;
+            keys["arrowright"] = false;
+            touchStartX = null;
+        });
+
     </script>
 </body>
 </html>
