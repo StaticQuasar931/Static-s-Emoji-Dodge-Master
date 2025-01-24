@@ -79,7 +79,7 @@
             margin-top: 10px;
             z-index: 10;
         }
-        .highScore, .money, .score {
+        .highScore, .money, .score, .upgrades {
             background: rgba(0, 0, 0, 0.6);
             padding: 10px;
             border-radius: 5px;
@@ -87,6 +87,32 @@
             flex: 1;
             margin: 0 5px;
             font-size: 18px;
+        }
+        .upgrades {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .upgrade-item {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .upgrade-item span {
+            font-size: 14px;
+        }
+        .upgrade-item button {
+            padding: 3px 6px;
+            font-size: 14px;
+            background: #666;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .upgrade-item button:hover {
+            background: #777;
         }
 
         /* Menus and Shop */
@@ -171,7 +197,7 @@
                 flex-direction: column;
                 align-items: center;
             }
-            .highScore, .money, .score {
+            .highScore, .money, .score, .upgrades {
                 margin: 5px 0;
                 width: 100%;
             }
@@ -215,6 +241,20 @@
         </div>
         <div class="score">
             Score: <span id="score">0</span>
+        </div>
+        <div class="upgrades">
+            <div class="upgrade-item">
+                <span>Speed Upgrade: <span id="speedLevel">0</span></span>
+                <button id="upgradeSpeedMain">Buy</button>
+            </div>
+            <div class="upgrade-item">
+                <span>Double Money: <span id="doubleMoneyLevel">0</span></span>
+                <button id="buyDoubleMoneyMain">Buy</button>
+            </div>
+            <div class="upgrade-item">
+                <span>Shield: <span id="shieldLevel">0</span></span>
+                <button id="buyShieldMain">Buy</button>
+            </div>
         </div>
     </div>
 
@@ -284,6 +324,12 @@
         const upgradeSpeedButton = document.getElementById("upgradeSpeed");
         const buyShieldButton = document.getElementById("buyShield");
         const buyDoubleMoneyButton = document.getElementById("buyDoubleMoney");
+        const upgradeSpeedMain = document.getElementById("upgradeSpeedMain");
+        const buyShieldMain = document.getElementById("buyShieldMain");
+        const buyDoubleMoneyMain = document.getElementById("buyDoubleMoneyMain");
+        const speedLevelDisplay = document.getElementById("speedLevel");
+        const doubleMoneyLevelDisplay = document.getElementById("doubleMoneyLevel");
+        const shieldLevelDisplay = document.getElementById("shieldLevel");
 
         // Audio Elements
         const bgMusic = document.getElementById("bgMusic");
@@ -302,6 +348,11 @@
 
         let speedUpgrade = localStorage.getItem('speedUpgrade') ? parseInt(localStorage.getItem('speedUpgrade')) : 0;
         let doubleMoneyUpgrade = localStorage.getItem('doubleMoneyUpgrade') ? parseInt(localStorage.getItem('doubleMoneyUpgrade')) : 0;
+        let shieldUpgrade = localStorage.getItem('shieldUpgrade') ? parseInt(localStorage.getItem('shieldUpgrade')) : 0;
+
+        speedLevelDisplay.textContent = speedUpgrade;
+        doubleMoneyLevelDisplay.textContent = doubleMoneyUpgrade;
+        shieldLevelDisplay.textContent = shieldUpgrade;
 
         const player = {
             x: canvas.width / 2 - 20,
@@ -330,6 +381,7 @@
             localStorage.setItem('score', score);
             localStorage.setItem('speedUpgrade', speedUpgrade);
             localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
+            localStorage.setItem('shieldUpgrade', shieldUpgrade);
         }
 
         // Reset Game State
@@ -342,7 +394,6 @@
             player.shield = false;
             player.shieldDuration = 0;
             scoreDisplay.textContent = score;
-            moneyDisplay.textContent = money;
             deathMessage.style.display = "none";
             saveProgress();
         }
@@ -461,6 +512,10 @@
         function applyShield() {
             player.shield = true;
             player.shieldDuration = 300; // Frames (approx 5 seconds at 60fps)
+            shieldUpgrade += 1;
+            shieldLevelDisplay.textContent = shieldUpgrade;
+            localStorage.setItem('shieldUpgrade', shieldUpgrade);
+            saveProgress();
         }
 
         // Handle Shield Duration
@@ -471,6 +526,25 @@
                     player.shield = false;
                 }
             }
+        }
+
+        // Increase Difficulty Based on Score
+        function increaseDifficulty() {
+            // Every 100 points, increase spawn rate and obstacle speed
+            const difficultyLevel = Math.floor(score / 100);
+            // Cap difficulty level to prevent excessive difficulty
+            const cappedDifficulty = Math.min(difficultyLevel, 10);
+            // Adjust obstacle speed based on difficulty
+            // Already handled in createObstacle by speedUpgrade
+            // Adjust spawn rate by modifying the spawn interval
+            clearInterval(spawnInterval);
+            const newSpawnRate = Math.max(500, 1000 - cappedDifficulty * 50); // Minimum 500ms spawn rate
+            spawnInterval = setInterval(() => {
+                if (!gamePaused && !gameOver) {
+                    createObstacle();
+                    createStar();
+                }
+            }, newSpawnRate);
         }
 
         // Game Loop
@@ -490,6 +564,9 @@
             checkCollisions();
             handleShields();
 
+            // Increase difficulty based on score
+            increaseDifficulty();
+
             if (gameOver) {
                 if (score > highScore) {
                     highScore = score;
@@ -508,12 +585,13 @@
 
         // Start Spawning Obstacles and Stars
         function startSpawning() {
+            const initialSpawnRate = 1000; // 1 second
             spawnInterval = setInterval(() => {
                 if (!gamePaused && !gameOver) {
                     createObstacle();
                     createStar();
                 }
-            }, 1000);
+            }, initialSpawnRate);
         }
 
         // Stop Spawning
@@ -562,7 +640,15 @@
         // Initial Menu Display
         showMenu(false);
 
-        // Event Listeners for Opening and Closing Shop
+        // Event Listeners for Opening and Closing Shop from Shop Interface
+        closeShopButton.addEventListener("click", () => {
+            shop.classList.remove("active");
+            if (gameOver) {
+                menu.style.display = "flex";
+            }
+        });
+
+        // Event Listeners for Opening Shop from Main Menu
         openShopButton.addEventListener("click", () => {
             menu.style.display = "none";
             shop.classList.add("active");
@@ -573,14 +659,7 @@
             shop.classList.add("active");
         });
 
-        closeShopButton.addEventListener("click", () => {
-            shop.classList.remove("active");
-            if (gameOver) {
-                menu.style.display = "flex";
-            }
-        });
-
-        // Upgrade Purchase Handlers
+        // Upgrade Purchase Handlers in Shop
         upgradeSpeedButton.addEventListener("click", () => {
             const price = 50 * (speedUpgrade + 1); // Scalable pricing
             if (money >= price) {
@@ -588,6 +667,7 @@
                 moneyDisplay.textContent = money;
                 player.speed += 1;
                 speedUpgrade += 1;
+                speedLevelDisplay.textContent = speedUpgrade;
                 localStorage.setItem('speedUpgrade', speedUpgrade);
                 saveProgress();
             } else {
@@ -596,11 +676,13 @@
         });
 
         buyShieldButton.addEventListener("click", () => {
-            const price = 100 * (speedUpgrade + 1); // Scalable pricing
+            const price = 100 * (shieldUpgrade + 1); // Scalable pricing
             if (money >= price) {
                 money -= price;
                 moneyDisplay.textContent = money;
                 applyShield();
+                shieldLevelDisplay.textContent = shieldUpgrade;
+                localStorage.setItem('shieldUpgrade', shieldUpgrade);
                 saveProgress();
             } else {
                 alert("Not enough money!");
@@ -613,6 +695,51 @@
                 money -= price;
                 moneyDisplay.textContent = money;
                 doubleMoneyUpgrade += 1;
+                doubleMoneyLevelDisplay.textContent = doubleMoneyUpgrade;
+                localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
+                saveProgress();
+            } else {
+                alert("Not enough money!");
+            }
+        });
+
+        // Upgrade Purchase Handlers in Main UI Panel
+        upgradeSpeedMain.addEventListener("click", () => {
+            const price = 50 * (speedUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                player.speed += 1;
+                speedUpgrade += 1;
+                speedLevelDisplay.textContent = speedUpgrade;
+                localStorage.setItem('speedUpgrade', speedUpgrade);
+                saveProgress();
+            } else {
+                alert("Not enough money!");
+            }
+        });
+
+        buyShieldMain.addEventListener("click", () => {
+            const price = 100 * (shieldUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                applyShield();
+                shieldLevelDisplay.textContent = shieldUpgrade;
+                localStorage.setItem('shieldUpgrade', shieldUpgrade);
+                saveProgress();
+            } else {
+                alert("Not enough money!");
+            }
+        });
+
+        buyDoubleMoneyMain.addEventListener("click", () => {
+            const price = 150 * (doubleMoneyUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                doubleMoneyUpgrade += 1;
+                doubleMoneyLevelDisplay.textContent = doubleMoneyUpgrade;
                 localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
                 saveProgress();
             } else {
