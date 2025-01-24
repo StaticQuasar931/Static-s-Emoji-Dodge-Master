@@ -5,41 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emoji Dodge Master</title>
     <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             margin: 0;
             overflow: hidden;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(to bottom, #1e3c72, #1a508b);
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            position: relative;
         }
+
+        /* Top Left Footer */
+        .footer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff00ff;
+            animation: rainbow 5s linear infinite;
+            font-family: 'Creepster', cursive; /* Zombie-like font */
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        /* Rainbow Animation */
+        @keyframes rainbow {
+            0% { color: red; }
+            16% { color: orange; }
+            33% { color: yellow; }
+            50% { color: green; }
+            66% { color: blue; }
+            83% { color: indigo; }
+            100% { color: violet; }
+        }
+
+        /* Canvas Styling */
         canvas {
             border: 2px solid #444;
             background: rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
+            margin-top: 60px; /* Space for footer */
             width: 90vw;
             max-width: 600px;
             height: 150vw;
             max-height: 900px;
         }
+
+        /* UI Panel */
         .ui {
             display: flex;
             justify-content: space-between;
             width: 90vw;
             max-width: 600px;
             margin-top: 10px;
+            z-index: 10;
         }
-        .score, .upgrades {
+        .score, .money, .highScore {
             background: rgba(0, 0, 0, 0.6);
             padding: 10px;
             border-radius: 5px;
             text-align: center;
             flex: 1;
             margin: 0 5px;
+            font-size: 18px;
         }
+
+        /* Menus and Shop */
         .menu, .shop {
             position: absolute;
             top: 0;
@@ -51,9 +91,10 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            z-index: 10;
+            z-index: 30;
             padding: 20px;
             box-sizing: border-box;
+            overflow-y: auto;
         }
         .menu.active, .shop.active {
             display: flex;
@@ -67,28 +108,10 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background 0.3s;
         }
         .menu button:hover, .shop button:hover {
             background: #555;
-        }
-        .qr-code {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            width: 100px;
-            height: 100px;
-            cursor: pointer;
-        }
-        .footer {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            color: white;
-        }
-        .footer a {
-            color: #00bfff;
-            text-decoration: none;
         }
         .shop-item {
             background: rgba(0, 0, 0, 0.7);
@@ -100,29 +123,72 @@
             justify-content: space-between;
             align-items: center;
         }
+        .shop-item span {
+            flex: 1;
+            font-size: 16px;
+        }
         .shop-item button {
             padding: 5px 10px;
             font-size: 16px;
         }
+
+        /* QR Code Styling */
+        .qr-code {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* Footer Link Styling */
+        .footer a {
+            color: #00bfff;
+            text-decoration: none;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { text-shadow: 0 0 5px #fff; }
+            50% { text-shadow: 0 0 20px #ff00ff; }
+            100% { text-shadow: 0 0 5px #fff; }
+        }
+
         /* Responsive Design */
         @media (max-width: 600px) {
             .ui {
                 flex-direction: column;
                 align-items: center;
             }
-            .score, .upgrades {
+            .score, .money, .highScore {
                 margin: 5px 0;
                 width: 100%;
             }
+            canvas {
+                margin-top: 80px; /* Increased space for larger footer */
+            }
         }
     </style>
+    <!-- Import Zombie-like Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Top Left Footer -->
+    <div class="footer">
+        <a href="https://sites.google.com/view/staticquasar931" target="_blank">Made by Static</a>
+    </div>
+
+    <!-- UI Panel -->
     <div class="ui">
+        <div class="highScore">
+            High Score: <span id="highScore">0</span>
+        </div>
+        <div class="money">
+            Money: $<span id="money">0</span>
+        </div>
         <div class="score">
-            <div>High Score: <span id="highScore">0</span></div>
-            <div>Money: $<span id="money">0</span></div>
-            <div>Score: <span id="score">0</span></div>
+            Score: <span id="score">0</span>
         </div>
     </div>
 
@@ -134,8 +200,12 @@
             <button id="upgradeSpeed">Buy</button>
         </div>
         <div class="shop-item">
-            <span>Shield (Temporary)</span>
-            <button id="buyShield">Buy ($100)</button>
+            <span>Shield (Temporary) ($100)</span>
+            <button id="buyShield">Buy</button>
+        </div>
+        <div class="shop-item">
+            <span>Double Money ($150)</span>
+            <button id="buyDoubleMoney">Buy</button>
         </div>
         <button id="closeShop">Close Shop</button>
     </div>
@@ -150,30 +220,30 @@
         <p id="deathMessage" style="display:none">Game Over! Try Again!</p>
     </div>
 
+    <!-- Game Canvas -->
     <canvas id="gameCanvas" width="600" height="900"></canvas>
 
+    <!-- QR Code Link -->
     <a href="https://sites.google.com/view/staticquasar931" target="_blank">
         <img src="https://res.cloudinary.com/dcsrqennd/image/upload/v1733694622/frame_1_vmv9y3.png" alt="QR Code" class="qr-code">
     </a>
-    <div class="footer">
-        <p>Made by <a href="https://sites.google.com/view/staticquasar931" target="_blank">Static</a></p>
-    </div>
 
     <!-- Audio Elements -->
     <audio id="bgMusic" loop>
-        <source src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAw=" type="audio/mp3">
-        <!-- Placeholder: Insert actual base64 audio data here -->
+        <source src="data:audio/mp3;base64,//uQx... (base64 data)" type="audio/mp3">
+        <!-- Replace with actual base64 audio data -->
     </audio>
     <audio id="collectSound">
-        <source src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAw=" type="audio/mp3">
-        <!-- Placeholder: Insert actual base64 audio data here -->
+        <source src="data:audio/mp3;base64,//uQx... (base64 data)" type="audio/mp3">
+        <!-- Replace with actual base64 audio data -->
     </audio>
     <audio id="collisionSound">
-        <source src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAwAAAAEAAACcQCAAw=" type="audio/mp3">
-        <!-- Placeholder: Insert actual base64 audio data here -->
+        <source src="data:audio/mp3;base64,//uQx... (base64 data)" type="audio/mp3">
+        <!-- Replace with actual base64 audio data -->
     </audio>
 
     <script>
+        // DOM Elements
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreDisplay = document.getElementById("score");
@@ -187,18 +257,25 @@
         const deathMessage = document.getElementById("deathMessage");
         const upgradeSpeedButton = document.getElementById("upgradeSpeed");
         const buyShieldButton = document.getElementById("buyShield");
+        const buyDoubleMoneyButton = document.getElementById("buyDoubleMoney");
 
         // Audio Elements
         const bgMusic = document.getElementById("bgMusic");
         const collectSound = document.getElementById("collectSound");
         const collisionSound = document.getElementById("collisionSound");
 
-        // Initialize highScore and money from localStorage
+        // Game State Variables
         let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
         highScoreDisplay.textContent = highScore;
 
         let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 0;
         moneyDisplay.textContent = money;
+
+        let score = localStorage.getItem('score') ? parseInt(localStorage.getItem('score')) : 0;
+        scoreDisplay.textContent = score;
+
+        let speedUpgrade = localStorage.getItem('speedUpgrade') ? parseInt(localStorage.getItem('speedUpgrade')) : 0;
+        let doubleMoneyUpgrade = localStorage.getItem('doubleMoneyUpgrade') ? parseInt(localStorage.getItem('doubleMoneyUpgrade')) : 0;
 
         const player = {
             x: canvas.width / 2 - 20,
@@ -213,8 +290,6 @@
 
         let obstacles = [];
         let stars = [];
-        let score = localStorage.getItem('score') ? parseInt(localStorage.getItem('score')) : 0;
-        scoreDisplay.textContent = score;
         let gameOver = false;
         let gamePaused = false;
         let keys = {};
@@ -222,17 +297,16 @@
         let spawnInterval;
         let animationFrameId;
 
-        // Upgrades
-        let speedUpgrade = localStorage.getItem('speedUpgrade') ? parseInt(localStorage.getItem('speedUpgrade')) : 0;
-
-        // Function to save progress
+        // Function to Save Progress
         function saveProgress() {
             localStorage.setItem('highScore', highScore);
             localStorage.setItem('money', money);
             localStorage.setItem('score', score);
             localStorage.setItem('speedUpgrade', speedUpgrade);
+            localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
         }
 
+        // Reset Game State
         function resetGame() {
             player.x = canvas.width / 2 - 20;
             obstacles = [];
@@ -242,21 +316,25 @@
             player.shield = false;
             player.shieldDuration = 0;
             scoreDisplay.textContent = score;
+            moneyDisplay.textContent = money;
             deathMessage.style.display = "none";
             saveProgress();
         }
 
+        // Create Obstacles
         function createObstacle() {
             const x = Math.random() * (canvas.width - 40);
             const speed = 3 + speedUpgrade;
             obstacles.push({ x, y: -40, width: 40, height: 40, emoji: "🔥", speed });
         }
 
+        // Create Stars
         function createStar() {
             const x = Math.random() * (canvas.width - 40);
             stars.push({ x, y: -40, width: 40, height: 40, emoji: "⭐", speed: 2 });
         }
 
+        // Draw Player
         function drawPlayer() {
             ctx.font = "30px Arial";
             ctx.textAlign = "center";
@@ -271,6 +349,7 @@
             }
         }
 
+        // Draw Obstacles
         function drawObstacles() {
             obstacles.forEach(obstacle => {
                 ctx.font = "30px Arial";
@@ -280,6 +359,7 @@
             });
         }
 
+        // Draw Stars
         function drawStars() {
             stars.forEach(star => {
                 ctx.font = "30px Arial";
@@ -289,14 +369,17 @@
             });
         }
 
+        // Move Obstacles
         function moveObstacles() {
             obstacles.forEach(obstacle => obstacle.y += obstacle.speed);
         }
 
+        // Move Stars
         function moveStars() {
             stars.forEach(star => star.y += star.speed);
         }
 
+        // Check Collisions
         function checkCollisions() {
             obstacles.forEach((obstacle, index) => {
                 if (
@@ -308,7 +391,7 @@
                     if (player.shield) {
                         // Destroy the obstacle instead of game over
                         obstacles.splice(index, 1);
-                        // Optionally, add a sound or effect
+                        // Optional: Add a visual effect or sound
                     } else {
                         collisionSound.play();
                         gameOver = true;
@@ -330,7 +413,7 @@
                 ) {
                     collectSound.play();
                     score += 10;
-                    money += 5;
+                    money += 5 * (1 + doubleMoneyUpgrade);
                     scoreDisplay.textContent = score;
                     moneyDisplay.textContent = money;
                     stars.splice(index, 1);
@@ -342,16 +425,19 @@
             });
         }
 
+        // Move Player Based on Input
         function movePlayer() {
             if (keys["arrowleft"] || keys["a"]) player.x = Math.max(0, player.x - player.speed);
             if (keys["arrowright"] || keys["d"]) player.x = Math.min(canvas.width - player.width, player.x + player.speed);
         }
 
+        // Apply Shield Effect
         function applyShield() {
             player.shield = true;
             player.shieldDuration = 300; // Frames (approx 5 seconds at 60fps)
         }
 
+        // Handle Shield Duration
         function handleShields() {
             if (player.shield) {
                 player.shieldDuration--;
@@ -361,6 +447,7 @@
             }
         }
 
+        // Game Loop
         function gameLoop() {
             if (gamePaused || gameOver) return;
 
@@ -390,9 +477,10 @@
                 return;
             }
 
-            requestAnimationFrame(gameLoop);
+            animationFrameId = requestAnimationFrame(gameLoop);
         }
 
+        // Start Spawning Obstacles and Stars
         function startSpawning() {
             spawnInterval = setInterval(() => {
                 if (!gamePaused && !gameOver) {
@@ -402,10 +490,12 @@
             }, 1000);
         }
 
+        // Stop Spawning
         function stopSpawning() {
             clearInterval(spawnInterval);
         }
 
+        // Show Menu or Pause Menu
         function showMenu(isPause = false) {
             if (isPause) {
                 menu.innerHTML = `
@@ -419,6 +509,7 @@
                     gamePaused = false;
                     gameLoop();
                     startSpawning();
+                    bgMusic.play();
                 });
             } else {
                 menu.innerHTML = `
@@ -442,7 +533,7 @@
             menu.style.display = "flex";
         }
 
-        // Initial menu display
+        // Initial Menu Display
         showMenu(false);
 
         // Event Listeners for Opening and Closing Shop
@@ -458,13 +549,16 @@
 
         closeShopButton.addEventListener("click", () => {
             shop.classList.remove("active");
-            menu.style.display = "flex";
+            if (gameOver) {
+                menu.style.display = "flex";
+            }
         });
 
         // Upgrade Purchase Handlers
         upgradeSpeedButton.addEventListener("click", () => {
-            if (money >= 50) {
-                money -= 50;
+            const price = 50 * (speedUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
                 moneyDisplay.textContent = money;
                 player.speed += 1;
                 speedUpgrade += 1;
@@ -476,8 +570,9 @@
         });
 
         buyShieldButton.addEventListener("click", () => {
-            if (money >= 100) {
-                money -= 100;
+            const price = 100 * (speedUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
                 moneyDisplay.textContent = money;
                 applyShield();
                 saveProgress();
@@ -486,7 +581,20 @@
             }
         });
 
-        // Keyboard Controls
+        buyDoubleMoneyButton.addEventListener("click", () => {
+            const price = 150 * (doubleMoneyUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                doubleMoneyUpgrade += 1;
+                localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
+                saveProgress();
+            } else {
+                alert("Not enough money!");
+            }
+        });
+
+        // Keyboard Controls for Movement and Pause
         document.addEventListener("keydown", e => {
             const key = e.key.toLowerCase();
             keys[key] = true;
@@ -510,7 +618,7 @@
             keys[key] = false;
         });
 
-        // Restart game on space or enter after game over
+        // Restart Game on Space or Enter after Game Over
         document.addEventListener("keydown", e => {
             if (gameOver && [" ", "enter"].includes(e.key.toLowerCase())) {
                 resetGame();
@@ -522,30 +630,21 @@
             }
         });
 
-        // Shop buttons within menu
-        menu.addEventListener("click", (e) => {
-            if (e.target.id === "openShop") {
-                menu.style.display = "none";
-                shop.classList.add("active");
-            }
-        });
+        // Initialize Background Music Settings
+        bgMusic.volume = 0.3; // Adjust volume as needed
 
-        // Start background music when game starts
+        // Start Background Music When Game Starts
         startButton?.addEventListener("click", () => {
             bgMusic.play();
         });
-
-        // Initialize Background Music
-        bgMusic.volume = 0.3; // Adjust volume as needed
-        bgMusic.play();
 
         // Responsive Canvas
         function resizeCanvas() {
             const aspectRatio = canvas.width / canvas.height;
             let newWidth = window.innerWidth * 0.9;
             let newHeight = newWidth / aspectRatio;
-            if (newHeight > window.innerHeight * 0.9) {
-                newHeight = window.innerHeight * 0.9;
+            if (newHeight > window.innerHeight * 0.7) { // Adjusted for footer
+                newHeight = window.innerHeight * 0.7;
                 newWidth = newHeight * aspectRatio;
             }
             canvas.style.width = `${newWidth}px`;
@@ -581,7 +680,6 @@
             keys["arrowright"] = false;
             touchStartX = null;
         });
-
     </script>
 </body>
 </html>
