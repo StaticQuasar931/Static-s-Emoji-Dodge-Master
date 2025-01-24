@@ -27,6 +27,7 @@
             display: flex;
             justify-content: space-between;
             width: 600px;
+            margin-top: 10px;
         }
         .score, .upgrades {
             background: rgba(0, 0, 0, 0.6);
@@ -114,6 +115,10 @@
         const startButton = document.getElementById("startButton");
         const deathMessage = document.getElementById("deathMessage");
 
+        // Initialize highScore from localStorage
+        let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+        highScoreDisplay.textContent = highScore;
+
         const player = {
             x: canvas.width / 2 - 20,
             y: canvas.height - 60,
@@ -126,19 +131,22 @@
         let obstacles = [];
         let stars = [];
         let score = 0;
-        let highScore = 0;
         let money = 0;
         let gameOver = false;
         let gamePaused = false;
         let keys = {};
+
+        let spawnInterval;
 
         function resetGame() {
             player.x = canvas.width / 2 - 20;
             obstacles = [];
             stars = [];
             score = 0;
+            money = 0;
             gameOver = false;
             scoreDisplay.textContent = score;
+            moneyDisplay.textContent = money;
             deathMessage.style.display = "none";
         }
 
@@ -222,8 +230,15 @@
             });
         }
 
+        function movePlayer() {
+            if (keys["arrowleft"] || keys["a"]) player.x = Math.max(0, player.x - player.speed);
+            if (keys["arrowright"] || keys["d"]) player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+        }
+
         function gameLoop() {
             if (gamePaused || gameOver) return;
+
+            movePlayer();
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -236,54 +251,99 @@
             checkCollisions();
 
             if (gameOver) {
-                highScore = Math.max(highScore, score);
-                highScoreDisplay.textContent = highScore;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                    highScoreDisplay.textContent = highScore;
+                }
                 menu.style.display = "flex";
+                stopSpawning();
                 return;
             }
 
             requestAnimationFrame(gameLoop);
         }
 
+        function startSpawning() {
+            spawnInterval = setInterval(() => {
+                if (!gamePaused && !gameOver) {
+                    createObstacle();
+                    createStar();
+                }
+            }, 1000);
+        }
+
+        function stopSpawning() {
+            clearInterval(spawnInterval);
+        }
+
+        function showMenu(isPause = false) {
+            if (isPause) {
+                menu.innerHTML = `
+                    <h1>Paused</h1>
+                    <button id="resumeButton">Resume Game</button>
+                `;
+                const resumeButton = document.getElementById("resumeButton");
+                resumeButton.addEventListener("click", () => {
+                    menu.style.display = "none";
+                    gamePaused = false;
+                    gameLoop();
+                    startSpawning();
+                });
+            } else {
+                menu.innerHTML = `
+                    <h1>Emoji Dodge Master</h1>
+                    <p>Use Left and Right Arrow Keys or A/D to move.</p>
+                    <p>Avoid 🔥 and collect ⭐ to earn points!</p>
+                    <button id="startButton">Start Game</button>
+                    <p id="deathMessage" style="display:none">Game Over! Try Again!</p>
+                `;
+                const newStartButton = document.getElementById("startButton");
+                newStartButton.addEventListener("click", () => {
+                    menu.style.display = "none";
+                    resetGame();
+                    gamePaused = false;
+                    gameLoop();
+                    startSpawning();
+                });
+            }
+            menu.style.display = "flex";
+        }
+
+        // Initial menu display
+        showMenu(false);
+
         document.addEventListener("keydown", e => {
-            keys[e.key] = true;
-            if (e.key === "Escape") {
+            const key = e.key.toLowerCase();
+            keys[key] = true;
+            if (key === "escape") {
                 gamePaused = !gamePaused;
-                menu.style.display = gamePaused ? "flex" : "none";
+                if (gamePaused) {
+                    showMenu(true);
+                    stopSpawning();
+                } else {
+                    menu.style.display = "none";
+                    gameLoop();
+                    startSpawning();
+                }
             }
         });
 
-        document.addEventListener("keyup", e => keys[e.key] = false);
-
-        function movePlayer() {
-            if (keys["ArrowLeft"] || keys["a"]) player.x = Math.max(0, player.x - player.speed);
-            if (keys["ArrowRight"] || keys["d"]) player.x = Math.min(canvas.width - player.width, player.x + player.speed);
-        }
-
-        startButton.addEventListener("click", () => {
-            menu.style.display = "none";
-            resetGame();
-            gamePaused = false;
-            gameLoop();
+        document.addEventListener("keyup", e => {
+            const key = e.key.toLowerCase();
+            keys[key] = false;
         });
 
+        // Restart game on space or enter after game over
         document.addEventListener("keydown", e => {
-            if ([" ", "Enter"].includes(e.key) && gameOver) {
+            if (gameOver && [" ", "enter"].includes(e.key.toLowerCase())) {
                 resetGame();
                 menu.style.display = "none";
                 gamePaused = false;
                 gameLoop();
+                startSpawning();
             }
         });
-
-        setInterval(() => {
-            if (!gamePaused && !gameOver) {
-                createObstacle();
-                createStar();
-            }
-        }, 1000);
-
-        setInterval(movePlayer, 16);
     </script>
 </body>
 </html>
