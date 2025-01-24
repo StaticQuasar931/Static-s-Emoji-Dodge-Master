@@ -534,8 +534,6 @@
             const difficultyLevel = Math.floor(score / 100);
             // Cap difficulty level to prevent excessive difficulty
             const cappedDifficulty = Math.min(difficultyLevel, 10);
-            // Adjust obstacle speed based on difficulty
-            // Already handled in createObstacle by speedUpgrade
             // Adjust spawn rate by modifying the spawn interval
             clearInterval(spawnInterval);
             const newSpawnRate = Math.max(500, 1000 - cappedDifficulty * 50); // Minimum 500ms spawn rate
@@ -670,6 +668,7 @@
                 speedLevelDisplay.textContent = speedUpgrade;
                 localStorage.setItem('speedUpgrade', speedUpgrade);
                 saveProgress();
+                updateBuyButtons();
             } else {
                 alert("Not enough money!");
             }
@@ -684,6 +683,7 @@
                 shieldLevelDisplay.textContent = shieldUpgrade;
                 localStorage.setItem('shieldUpgrade', shieldUpgrade);
                 saveProgress();
+                updateBuyButtons();
             } else {
                 alert("Not enough money!");
             }
@@ -698,6 +698,7 @@
                 doubleMoneyLevelDisplay.textContent = doubleMoneyUpgrade;
                 localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
                 saveProgress();
+                updateBuyButtons();
             } else {
                 alert("Not enough money!");
             }
@@ -714,6 +715,7 @@
                 speedLevelDisplay.textContent = speedUpgrade;
                 localStorage.setItem('speedUpgrade', speedUpgrade);
                 saveProgress();
+                updateBuyButtons();
             } else {
                 alert("Not enough money!");
             }
@@ -728,6 +730,7 @@
                 shieldLevelDisplay.textContent = shieldUpgrade;
                 localStorage.setItem('shieldUpgrade', shieldUpgrade);
                 saveProgress();
+                updateBuyButtons();
             } else {
                 alert("Not enough money!");
             }
@@ -742,6 +745,7 @@
                 doubleMoneyLevelDisplay.textContent = doubleMoneyUpgrade;
                 localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
                 saveProgress();
+                updateBuyButtons();
             } else {
                 alert("Not enough money!");
             }
@@ -833,6 +837,79 @@
             keys["arrowright"] = false;
             touchStartX = null;
         });
+
+        // Update Buy Buttons Based on Current Money
+        function updateBuyButtons() {
+            const speedPrice = 50 * (speedUpgrade + 1);
+            const shieldPrice = 100 * (shieldUpgrade + 1);
+            const doubleMoneyPrice = 150 * (doubleMoneyUpgrade + 1);
+
+            // Shop Buttons
+            upgradeSpeedButton.textContent = `Buy ($${speedPrice})`;
+            buyShieldButton.textContent = `Buy ($${shieldPrice})`;
+            buyDoubleMoneyButton.textContent = `Buy ($${doubleMoneyPrice})`;
+
+            // Main UI Buttons
+            upgradeSpeedMain.textContent = `Buy ($${speedPrice})`;
+            buyShieldMain.textContent = `Buy ($${shieldPrice})`;
+            buyDoubleMoneyMain.textContent = `Buy ($${doubleMoneyPrice})`;
+
+            // Enable or Disable Buttons Based on Money
+            if (money >= speedPrice) {
+                upgradeSpeedButton.disabled = false;
+                upgradeSpeedMain.disabled = false;
+                upgradeSpeedButton.style.background = '#666';
+                upgradeSpeedMain.style.background = '#666';
+            } else {
+                upgradeSpeedButton.disabled = true;
+                upgradeSpeedMain.disabled = true;
+                upgradeSpeedButton.style.background = '#333';
+                upgradeSpeedMain.style.background = '#333';
+            }
+
+            if (money >= shieldPrice) {
+                buyShieldButton.disabled = false;
+                buyShieldMain.disabled = false;
+                buyShieldButton.style.background = '#666';
+                buyShieldMain.style.background = '#666';
+            } else {
+                buyShieldButton.disabled = true;
+                buyShieldMain.disabled = true;
+                buyShieldButton.style.background = '#333';
+                buyShieldMain.style.background = '#333';
+            }
+
+            if (money >= doubleMoneyPrice) {
+                buyDoubleMoneyButton.disabled = false;
+                buyDoubleMoneyMain.disabled = false;
+                buyDoubleMoneyButton.style.background = '#666';
+                buyDoubleMoneyMain.style.background = '#666';
+            } else {
+                buyDoubleMoneyButton.disabled = true;
+                buyDoubleMoneyMain.disabled = true;
+                buyDoubleMoneyButton.style.background = '#333';
+                buyDoubleMoneyMain.style.background = '#333';
+            }
+        }
+
+        // Initial Update of Buy Buttons
+        updateBuyButtons();
+
+        // Call updateBuyButtons whenever money changes
+        function watchMoneyChange() {
+            // Override the money setter to call updateBuyButtons
+            let currentMoney = money;
+            Object.defineProperty(window, 'money', {
+                get: function() { return currentMoney; },
+                set: function(value) {
+                    currentMoney = value;
+                    moneyDisplay.textContent = currentMoney;
+                    updateBuyButtons();
+                }
+            });
+        }
+
+        watchMoneyChange();
     </script>
 </body>
 </html>
