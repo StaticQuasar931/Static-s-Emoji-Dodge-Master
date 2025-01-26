@@ -22,6 +22,13 @@
             align-items: center;
             height: 100vh;
             position: relative;
+            transition: background 0.5s;
+        }
+
+        /* Light/Dark Themes */
+        body.light {
+            background: linear-gradient(to bottom, #ffffff, #cccccc);
+            color: #333;
         }
 
         /* Top Left Footer - "Made by Static" */
@@ -68,6 +75,7 @@
             max-width: 600px;
             height: 150vw;
             max-height: 900px;
+            transition: width 0.5s, height 0.5s;
         }
 
         /* UI Panel */
@@ -111,8 +119,12 @@
             cursor: pointer;
             transition: background 0.3s;
         }
-        .upgrade-item button:hover {
+        .upgrade-item button:hover:not(:disabled) {
             background: #777;
+        }
+        .upgrade-item button:disabled {
+            background: #333;
+            cursor: not-allowed;
         }
 
         /* Shop Interface */
@@ -131,6 +143,7 @@
             padding: 20px;
             box-sizing: border-box;
             overflow-y: auto;
+            transition: opacity 0.5s;
         }
         .shop.active {
             display: flex;
@@ -200,6 +213,7 @@
             padding: 20px;
             box-sizing: border-box;
             overflow-y: auto;
+            transition: opacity 0.5s;
         }
         .menu.active {
             display: flex;
@@ -292,6 +306,108 @@
             color: #777;
             cursor: not-allowed;
         }
+
+        /* Pause Button */
+        .pause-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 25;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .pause-button:hover {
+            background: #555;
+        }
+
+        /* Settings and Help Buttons */
+        .top-right-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 25;
+            display: flex;
+            gap: 10px;
+        }
+        .top-right-buttons button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .top-right-buttons button:hover {
+            background: #555;
+        }
+
+        /* Tooltip Styling */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 160px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 40;
+            bottom: 125%; /* Position above the element */
+            left: 50%;
+            margin-left: -80px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Feedback Link */
+        .feedback-link {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #00bfff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .feedback-link:hover {
+            color: #ff00ff;
+        }
+
+        /* Light/Dark Theme Toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 10px;
+            left: 120px; /* Adjust based on pause button */
+            z-index: 25;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .theme-toggle:hover {
+            background: #555;
+        }
     </style>
     <!-- Import Zombie-like Font -->
     <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
@@ -300,7 +416,7 @@
     <!-- Top Left Footer - "Made by Static" -->
     <div class="footer">
         <!-- Each letter wrapped in a span for individual animation -->
-        <a href="https://sites.google.com/view/staticquasar931" target="_blank">
+        <a href="https://sites.google.com/view/staticquasar931" target="_blank" aria-label="Visit Static Quasar's Website">
             <span class="rainbow-letter">M</span>
             <span class="rainbow-letter">a</span>
             <span class="rainbow-letter">d</span>
@@ -330,17 +446,30 @@
             Score: <span id="score">0</span>
         </div>
         <div class="upgrades">
-            <div class="upgrade-item">
+            <div class="upgrade-item tooltip">
                 <span>Speed Upgrade: <span id="speedLevel">0</span></span>
-                <button id="upgradeSpeedMain" class="upgrade-unavailable">Buy</button>
+                <button id="upgradeSpeedMain" class="upgrade-unavailable" aria-label="Buy Speed Upgrade">Buy</button>
+                <span class="tooltiptext">Gradually increases your movement speed.</span>
             </div>
-            <div class="upgrade-item">
+            <div class="upgrade-item tooltip">
                 <span>Double Money: <span id="doubleMoneyLevel">0</span></span>
-                <button id="buyDoubleMoneyMain" class="upgrade-unavailable">Buy</button>
+                <button id="buyDoubleMoneyMain" class="upgrade-unavailable" aria-label="Buy Double Money Upgrade">Buy</button>
+                <span class="tooltiptext">Earn double money from collectibles.</span>
             </div>
-            <div class="upgrade-item">
+            <div class="upgrade-item tooltip">
                 <span>Shield: <span id="shieldLevel">0</span></span>
-                <button id="buyShieldMain" class="upgrade-unavailable">Buy</button>
+                <button id="buyShieldMain" class="upgrade-unavailable" aria-label="Buy Shield Upgrade">Buy</button>
+                <span class="tooltiptext">Activates a protective shield.</span>
+            </div>
+            <div class="upgrade-item tooltip">
+                <span>Acceleration Boost: <span id="accelerationLevel">0</span></span>
+                <button id="buyAccelerationMain" class="upgrade-unavailable" aria-label="Buy Acceleration Boost">Buy</button>
+                <span class="tooltiptext">Enhances your speed acceleration.</span>
+            </div>
+            <div class="upgrade-item tooltip">
+                <span>Max Speed Increase: <span id="maxSpeedLevel">0</span></span>
+                <button id="buyMaxSpeedMain" class="upgrade-unavailable" aria-label="Buy Max Speed Increase">Buy</button>
+                <span class="tooltiptext">Increases your maximum movement speed.</span>
             </div>
         </div>
     </div>
@@ -348,17 +477,30 @@
     <!-- Shop Interface -->
     <div class="shop" id="shop">
         <h1>Shop</h1>
-        <div class="shop-item">
+        <div class="shop-item tooltip">
             <span>Increase Speed ($50)</span>
-            <button id="upgradeSpeed" class="upgrade-unavailable">Buy ($50)</button>
+            <button id="upgradeSpeed" class="upgrade-unavailable" aria-label="Buy Speed Upgrade">Buy ($50)</button>
+            <span class="tooltiptext">Gradually increases your movement speed.</span>
         </div>
-        <div class="shop-item">
+        <div class="shop-item tooltip">
             <span>Shield (Temporary) ($100)</span>
-            <button id="buyShield" class="upgrade-unavailable">Buy ($100)</button>
+            <button id="buyShield" class="upgrade-unavailable" aria-label="Buy Shield Upgrade">Buy ($100)</button>
+            <span class="tooltiptext">Activates a protective shield.</span>
         </div>
-        <div class="shop-item">
+        <div class="shop-item tooltip">
             <span>Double Money ($150)</span>
-            <button id="buyDoubleMoney" class="upgrade-unavailable">Buy ($150)</button>
+            <button id="buyDoubleMoney" class="upgrade-unavailable" aria-label="Buy Double Money Upgrade">Buy ($150)</button>
+            <span class="tooltiptext">Earn double money from collectibles.</span>
+        </div>
+        <div class="shop-item tooltip">
+            <span>Acceleration Boost ($200)</span>
+            <button id="buyAcceleration" class="upgrade-unavailable" aria-label="Buy Acceleration Boost">Buy ($200)</button>
+            <span class="tooltiptext">Enhances your speed acceleration.</span>
+        </div>
+        <div class="shop-item tooltip">
+            <span>Max Speed Increase ($250)</span>
+            <button id="buyMaxSpeed" class="upgrade-unavailable" aria-label="Buy Max Speed Increase">Buy ($250)</button>
+            <span class="tooltiptext">Increases your maximum movement speed.</span>
         </div>
         <button id="closeShop">Close Shop</button>
     </div>
@@ -367,8 +509,8 @@
     <div class="menu" id="menu">
         <h1>Emoji Dodge Master</h1>
         <p>Use Left/Right Arrow Keys or A/D to move horizontally.</p>
-        <p>Use W/S or Up/Down Arrow Keys to move vertically.</p>
-        <p>Avoid 🔥, dodge 💣, and collect ⭐ and 💰 to earn points!</p>
+        <p>Press W to dash left and S to dash right.</p>
+        <p>Avoid 🔥 and 💣, and collect ⭐ and 💰 to earn points!</p>
         <button id="startButton">Start Game</button>
         <button id="openShop">Shop</button>
         <p id="deathMessage" style="display:none">Game Over! Try Again!</p>
@@ -379,8 +521,17 @@
 
     <!-- QR Code Link -->
     <a href="https://sites.google.com/view/staticquasar931" target="_blank">
-        <img src="https://res.cloudinary.com/dcsrqennd/image/upload/v1733694622/frame_1_vmv9y3.png" alt="QR Code" class="qr-code">
+        <img src="https://res.cloudinary.com/dcsrqennd/image/upload/v1733694622/frame_1_vmv9y3.png" alt="Scan QR Code to visit Static Quasar's website" class="qr-code">
     </a>
+
+    <!-- Pause Button -->
+    <button class="pause-button" id="pauseButton" aria-label="Pause Game">Pause</button>
+
+    <!-- Top Right Buttons (Help and Settings) -->
+    <div class="top-right-buttons">
+        <button id="helpButton" aria-label="Open Help">Help</button>
+        <button id="settingsButton" aria-label="Open Settings">Settings</button>
+    </div>
 
     <!-- Audio Elements -->
     <audio id="bgMusic" loop>
@@ -395,6 +546,70 @@
         <source src="data:audio/mp3;base64,//uQx... (base64 data)" type="audio/mp3">
         <!-- Replace with actual base64 audio data -->
     </audio>
+    <audio id="shieldSound">
+        <source src="data:audio/mp3;base64,//uQx... (base64 data)" type="audio/mp3">
+        <!-- Replace with actual base64 audio data -->
+    </audio>
+    <audio id="bombExplosionSound">
+        <source src="data:audio/mp3;base64,//uQx... (base64 data)" type="audio/mp3">
+        <!-- Replace with actual base64 audio data -->
+    </audio>
+
+    <!-- Help Interface -->
+    <div class="shop" id="helpMenu">
+        <h1>Help</h1>
+        <p>Controls:</p>
+        <ul>
+            <li>Move Left: Left Arrow Key or A</li>
+            <li>Move Right: Right Arrow Key or D</li>
+            <li>Dash Left: W</li>
+            <li>Dash Right: S</li>
+            <li>Activate Shield: Spacebar</li>
+            <li>Pause Game: Click Pause Button or Press Escape</li>
+        </ul>
+        <button id="closeHelp">Close Help</button>
+    </div>
+
+    <!-- Settings Interface -->
+    <div class="shop" id="settingsMenu">
+        <h1>Settings</h1>
+        <div class="upgrade-item">
+            <span>Background Music Volume:</span>
+            <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.3">
+        </div>
+        <div class="upgrade-item">
+            <span>Sound Effects Volume:</span>
+            <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="0.5">
+        </div>
+        <div class="upgrade-item">
+            <span>Frame Rate:</span>
+            <select id="frameRate">
+                <option value="60">60 FPS</option>
+                <option value="80" selected>80 FPS</option>
+                <option value="30">30 FPS</option>
+            </select>
+        </div>
+        <div class="upgrade-item">
+            <span>Theme:</span>
+            <select id="themeSelect">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+        </div>
+        <div class="upgrade-item">
+            <span>Save Game:</span>
+            <button id="saveGame">Save Now</button>
+        </div>
+        <div class="upgrade-item">
+            <span>Reset Data:</span>
+            <button id="resetData">Reset Data</button>
+        </div>
+        <div class="upgrade-item">
+            <span>Feedback:</span>
+            <a href="https://forms.gle/9x1eGuBw4UeYGbk26" target="_blank" class="feedback-link">Provide Feedback</a>
+        </div>
+        <button id="closeSettings">Close Settings</button>
+    </div>
 
     <script>
         // DOM Elements
@@ -412,17 +627,38 @@
         const upgradeSpeedButton = document.getElementById("upgradeSpeed");
         const buyShieldButton = document.getElementById("buyShield");
         const buyDoubleMoneyButton = document.getElementById("buyDoubleMoney");
+        const buyAccelerationButton = document.getElementById("buyAcceleration");
+        const buyMaxSpeedButton = document.getElementById("buyMaxSpeed");
         const upgradeSpeedMain = document.getElementById("upgradeSpeedMain");
         const buyShieldMain = document.getElementById("buyShieldMain");
         const buyDoubleMoneyMain = document.getElementById("buyDoubleMoneyMain");
+        const buyAccelerationMain = document.getElementById("buyAccelerationMain");
+        const buyMaxSpeedMain = document.getElementById("buyMaxSpeedMain");
         const speedLevelDisplay = document.getElementById("speedLevel");
         const doubleMoneyLevelDisplay = document.getElementById("doubleMoneyLevel");
         const shieldLevelDisplay = document.getElementById("shieldLevel");
+        const accelerationLevelDisplay = document.getElementById("accelerationLevel");
+        const maxSpeedLevelDisplay = document.getElementById("maxSpeedLevel");
+        const pauseButton = document.getElementById("pauseButton");
+        const helpButton = document.getElementById("helpButton");
+        const settingsButton = document.getElementById("settingsButton");
+        const helpMenu = document.getElementById("helpMenu");
+        const closeHelpButton = document.getElementById("closeHelp");
+        const settingsMenu = document.getElementById("settingsMenu");
+        const closeSettingsButton = document.getElementById("closeSettings");
+        const themeToggle = document.getElementById("themeSelect");
+        const frameRateSelect = document.getElementById("frameRate");
+        const musicVolume = document.getElementById("musicVolume");
+        const sfxVolume = document.getElementById("sfxVolume");
+        const saveGameButton = document.getElementById("saveGame");
+        const resetDataButton = document.getElementById("resetData");
 
         // Audio Elements
         const bgMusic = document.getElementById("bgMusic");
         const collectSound = document.getElementById("collectSound");
         const collisionSound = document.getElementById("collisionSound");
+        const shieldSound = document.getElementById("shieldSound");
+        const bombExplosionSound = document.getElementById("bombExplosionSound");
 
         // Game State Variables
         let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
@@ -437,30 +673,43 @@
         let speedUpgrade = localStorage.getItem('speedUpgrade') ? parseInt(localStorage.getItem('speedUpgrade')) : 0;
         let doubleMoneyUpgrade = localStorage.getItem('doubleMoneyUpgrade') ? parseInt(localStorage.getItem('doubleMoneyUpgrade')) : 0;
         let shieldUpgrade = localStorage.getItem('shieldUpgrade') ? parseInt(localStorage.getItem('shieldUpgrade')) : 0;
+        let accelerationUpgrade = localStorage.getItem('accelerationUpgrade') ? parseInt(localStorage.getItem('accelerationUpgrade')) : 0;
+        let maxSpeedUpgrade = localStorage.getItem('maxSpeedUpgrade') ? parseInt(localStorage.getItem('maxSpeedUpgrade')) : 0;
 
         speedLevelDisplay.textContent = speedUpgrade;
         doubleMoneyLevelDisplay.textContent = doubleMoneyUpgrade;
         shieldLevelDisplay.textContent = shieldUpgrade;
+        accelerationLevelDisplay.textContent = accelerationUpgrade;
+        maxSpeedLevelDisplay.textContent = maxSpeedUpgrade;
 
         const player = {
             x: canvas.width / 2 - 20,
-            y: canvas.height / 2 - 20, // Center vertically for better movement
+            y: canvas.height - 80, // Positioned near the bottom for sliding under shield
             width: 40,
             height: 40,
             emoji: "😎",
+            baseSpeed: 5,
             speed: 5,
-            maxSpeed: 15, // Cap for speed
+            acceleration: 0.1,
+            currentAcceleration: 0,
+            maxSpeed: 15,
+            dashSpeed: 15,
+            dashCooldown: 0,
+            dashDuration: 15, // Frames
+            canDash: true,
             shield: false,
+            shieldCooldown: 0,
             shieldDuration: 0
         };
 
-        // Stationary Shield Position (center of canvas)
+        // Stationary Shield Position (bottom left corner)
         const shield = {
-            x: canvas.width / 2 - 50,
-            y: canvas.height / 2 - 50,
-            width: 100,
-            height: 100,
+            x: 20,
+            y: canvas.height - 120,
+            width: 150,
+            height: 60,
             active: false,
+            cooldown: 0,
             duration: 0
         };
 
@@ -472,6 +721,9 @@
 
         let spawnInterval;
         let animationFrameId;
+        let targetFPS = 80;
+        let frameDuration = 1000 / targetFPS;
+        let lastFrameTime = performance.now();
 
         // Function to Save Progress
         function saveProgress() {
@@ -481,25 +733,33 @@
             localStorage.setItem('speedUpgrade', speedUpgrade);
             localStorage.setItem('doubleMoneyUpgrade', doubleMoneyUpgrade);
             localStorage.setItem('shieldUpgrade', shieldUpgrade);
+            localStorage.setItem('accelerationUpgrade', accelerationUpgrade);
+            localStorage.setItem('maxSpeedUpgrade', maxSpeedUpgrade);
         }
 
         // Reset Game State
         function resetGame() {
             player.x = canvas.width / 2 - 20;
-            player.y = canvas.height / 2 - 20;
-            player.speed = 5;
+            player.y = canvas.height - 80;
+            player.speed = player.baseSpeed;
+            player.currentAcceleration = 0;
+            player.canDash = true;
+            player.shield = false;
+            player.shieldCooldown = 0;
+            player.shieldDuration = 0;
+
+            shield.active = false;
+            shield.cooldown = 0;
+            shield.duration = 0;
+
             obstacles = [];
             stars = [];
             score = 0;
             gameOver = false;
-            player.shield = false;
-            player.shieldDuration = 0;
-            shield.active = false;
-            shield.duration = 0;
             scoreDisplay.textContent = score;
             deathMessage.style.display = "none";
-            saveProgress();
             updateBuyButtons();
+            saveProgress();
         }
 
         // Create Obstacles
@@ -517,7 +777,7 @@
         function createStar() {
             const x = Math.random() * (canvas.width - 40);
             const y = -40;
-            const speed = 3 + speedUpgrade; // Match obstacle speed for synchronization
+            const speed = 3 + speedUpgrade; // Same speed as obstacles for consistency
             const types = ['star', 'money'];
             const type = types[Math.floor(Math.random() * types.length)];
             const emoji = type === 'star' ? '⭐' : '💰';
@@ -563,7 +823,7 @@
         function drawShield() {
             if (shield.active) {
                 ctx.beginPath();
-                ctx.rect(shield.x, shield.y, shield.width, shield.height);
+                ctx.arc(shield.x + shield.width / 2, shield.y + shield.height, shield.width / 2, Math.PI, 0, false);
                 ctx.fillStyle = "rgba(0, 255, 255, 0.3)";
                 ctx.fill();
                 ctx.strokeStyle = "cyan";
@@ -584,6 +844,7 @@
 
         // Check Collisions
         function checkCollisions() {
+            // Check Obstacles
             obstacles.forEach((obstacle, index) => {
                 if (
                     player.x < obstacle.x + obstacle.width &&
@@ -593,8 +854,12 @@
                 ) {
                     if (player.shield) {
                         // Destroy the obstacle instead of game over
+                        if (obstacle.type === 'bomb') {
+                            // Bomb explodes
+                            bombExplosionSound.play();
+                            explodeBomb(obstacle);
+                        }
                         obstacles.splice(index, 1);
-                        // Optional: Add a visual effect or sound
                     } else {
                         collisionSound.play();
                         gameOver = true;
@@ -604,12 +869,9 @@
 
                 // Additional behavior for Bomb
                 if (obstacle.type === 'bomb' && obstacle.y > canvas.height) {
-                    // Split bomb into two fire obstacles
-                    const newSpeed = obstacle.speed;
-                    const newX1 = obstacle.x - 20 > 0 ? obstacle.x - 20 : obstacle.x;
-                    const newX2 = obstacle.x + 20 < canvas.width - obstacle.width ? obstacle.x + 20 : obstacle.x;
-                    obstacles.push({ x: newX1, y: -40, width: 40, height: 40, emoji: '🔥', speed: newSpeed, type: 'fire' });
-                    obstacles.push({ x: newX2, y: -40, width: 40, height: 40, emoji: '🔥', speed: newSpeed, type: 'fire' });
+                    bombExplosionSound.play();
+                    explodeBomb(obstacle);
+                    obstacles.splice(index, 1);
                 }
 
                 if (obstacle.y > canvas.height) {
@@ -617,6 +879,7 @@
                 }
             });
 
+            // Check Stars
             stars.forEach((star, index) => {
                 if (
                     player.x < star.x + star.width &&
@@ -634,9 +897,10 @@
                     scoreDisplay.textContent = score;
                     moneyDisplay.textContent = money;
                     stars.splice(index, 1);
+                    updateBuyButtons();
                 }
 
-                // Shield Protection
+                // Shield Protection (objects landing on shield slide off)
                 if (shield.active) {
                     if (
                         star.x < shield.x + shield.width &&
@@ -654,38 +918,83 @@
             });
         }
 
+        // Explode Bomb Function
+        function explodeBomb(bomb) {
+            // Split all obstacles, stars, and bombs on screen
+            obstacles.forEach(obstacle => {
+                if (obstacle.type !== 'bomb' && obstacle.type !== 'fire') return;
+                // Split obstacles into two smaller ones
+                const newSpeed = obstacle.speed;
+                const newX1 = obstacle.x - 10 > 0 ? obstacle.x - 10 : obstacle.x;
+                const newX2 = obstacle.x + 10 < canvas.width - obstacle.width ? obstacle.x + 10 : obstacle.x;
+                obstacles.push({ x: newX1, y: -40, width: 40, height: 40, emoji: '🔥', speed: newSpeed, type: 'fire' });
+                obstacles.push({ x: newX2, y: -40, width: 40, height: 40, emoji: '🔥', speed: newSpeed, type: 'fire' });
+            });
+
+            stars.forEach((star, index) => {
+                stars.splice(index, 1); // Remove all stars
+            });
+        }
+
         // Move Player Based on Input
         function movePlayer() {
+            // Horizontal Movement
             if (keys["arrowleft"] || keys["a"]) {
-                player.x = Math.max(0, player.x - player.speed);
+                player.currentAcceleration = Math.max(player.currentAcceleration - player.acceleration, -player.speed);
             }
             if (keys["arrowright"] || keys["d"]) {
-                player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+                player.currentAcceleration = Math.min(player.currentAcceleration + player.acceleration, player.speed);
             }
-            if (keys["arrowup"] || keys["w"]) {
-                player.y = Math.max(0, player.y - player.speed);
-            }
-            if (keys["arrowdown"] || keys["s"]) {
-                player.y = Math.min(canvas.height - player.height, player.y + player.speed);
+
+            // Apply Acceleration
+            player.speed += player.currentAcceleration;
+            player.speed = Math.max(player.baseSpeed, Math.min(player.speed, player.maxSpeed));
+
+            // Update Position
+            player.x += player.speed;
+
+            // Clamp Position
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+            // Deceleration (Instant Stop)
+            if (!keys["arrowleft"] && !keys["a"] && !keys["arrowright"] && !keys["d"]) {
+                player.speed = player.baseSpeed;
+                player.currentAcceleration = 0;
             }
         }
 
         // Apply Shield Effect
-        function applyShield() {
-            shield.active = true;
-            shield.duration = 300; // Frames (approx 5 seconds at 60fps)
-            shieldUpgrade += 1;
-            shieldLevelDisplay.textContent = shieldUpgrade;
-            localStorage.setItem('shieldUpgrade', shieldUpgrade);
-            saveProgress();
+        function activateShield() {
+            if (shield.canActivate) {
+                shield.active = true;
+                shield.duration = 5000; // 5 seconds in milliseconds
+                shield.cooldown = 10000; // 10 seconds cooldown
+                shield.canActivate = false;
+                shieldSound.play();
+                // If shield is permanent (max level)
+                if (shieldUpgrade >= 50) {
+                    shield.active = true;
+                    shield.duration = Infinity;
+                }
+            }
         }
 
-        // Handle Shield Duration
-        function handleShields() {
+        // Handle Shields
+        function handleShields(deltaTime) {
             if (shield.active) {
-                shield.duration--;
+                shield.duration -= deltaTime;
                 if (shield.duration <= 0) {
                     shield.active = false;
+                    if (shieldUpgrade < 50) {
+                        shield.cooldown = 10000; // Reset cooldown
+                    }
+                }
+            }
+
+            if (!shield.canActivate) {
+                shield.cooldown -= deltaTime;
+                if (shield.cooldown <= 0) {
+                    shield.canActivate = true;
                 }
             }
         }
@@ -708,22 +1017,30 @@
         }
 
         // Game Loop
-        function gameLoop() {
+        function gameLoop(currentTime) {
             if (gamePaused || gameOver) return;
+
+            const deltaTime = currentTime - lastFrameTime;
+            if (deltaTime < frameDuration) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+                return;
+            }
+            lastFrameTime = currentTime;
 
             movePlayer();
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            drawPlayer();
             drawShield();
+            drawPlayer();
             drawObstacles();
             drawStars();
 
             moveObstacles();
             moveStars();
             checkCollisions();
-            handleShields();
+
+            handleShields(deltaTime);
 
             // Increase difficulty based on score
             increaseDifficulty();
@@ -734,7 +1051,7 @@
                     localStorage.setItem('highScore', highScore);
                     highScoreDisplay.textContent = highScore;
                 }
-                menu.style.display = "flex";
+                menu.classList.add("active");
                 bgMusic.pause();
                 stopSpawning();
                 saveProgress();
@@ -766,34 +1083,51 @@
                 menu.innerHTML = `
                     <h1>Paused</h1>
                     <button id="resumeButton">Resume Game</button>
-                    <button id="openShop">Shop</button>
+                    <button id="openShopPause">Shop</button>
                 `;
                 const resumeButton = document.getElementById("resumeButton");
+                const openShopPauseButton = document.getElementById("openShopPause");
+
                 resumeButton.addEventListener("click", () => {
-                    menu.style.display = "none";
+                    menu.classList.remove("active");
                     gamePaused = false;
-                    gameLoop();
+                    gameLoop(performance.now());
                     startSpawning();
                     bgMusic.play();
+                });
+
+                openShopPauseButton.addEventListener("click", () => {
+                    menu.classList.remove("active");
+                    shop.classList.add("active");
+                    updateBuyButtons();
                 });
             } else {
                 menu.innerHTML = `
                     <h1>Emoji Dodge Master</h1>
                     <p>Use Left/Right Arrow Keys or A/D to move horizontally.</p>
-                    <p>Use W/S or Up/Down Arrow Keys to move vertically.</p>
-                    <p>Avoid 🔥, dodge 💣, and collect ⭐ and 💰 to earn points!</p>
+                    <p>Press W to dash left and S to dash right.</p>
+                    <p>Avoid 🔥 and 💣, and collect ⭐ and 💰 to earn points!</p>
                     <button id="startButton">Start Game</button>
                     <button id="openShop">Shop</button>
                     <p id="deathMessage" style="display:none">Game Over! Try Again!</p>
                 `;
                 const newStartButton = document.getElementById("startButton");
+                const newOpenShopButton = document.getElementById("openShop");
+
                 newStartButton.addEventListener("click", () => {
-                    menu.style.display = "none";
+                    menu.classList.remove("active");
                     resetGame();
                     gamePaused = false;
-                    gameLoop();
+                    gameOver = false;
+                    gameLoop(performance.now());
                     startSpawning();
                     bgMusic.play();
+                });
+
+                newOpenShopButton.addEventListener("click", () => {
+                    menu.classList.remove("active");
+                    shop.classList.add("active");
+                    updateBuyButtons();
                 });
             }
             menu.classList.add("active");
@@ -817,7 +1151,8 @@
             updateBuyButtons();
         });
 
-        document.getElementById("openShop")?.addEventListener("click", () => {
+        // Event Listener for Opening Shop from Pause Menu
+        document.getElementById("openShopPause")?.addEventListener("click", () => {
             menu.classList.remove("active");
             shop.classList.add("active");
             updateBuyButtons();
@@ -829,10 +1164,13 @@
             if (money >= price) {
                 money -= price;
                 moneyDisplay.textContent = money;
-                player.speed = Math.min(player.speed + 1, player.maxSpeed); // Increase speed with cap
                 speedUpgrade += 1;
                 speedLevelDisplay.textContent = speedUpgrade;
+                player.baseSpeed += 0.5;
+                player.maxSpeed += 0.5;
+                player.speed = player.baseSpeed;
                 localStorage.setItem('speedUpgrade', speedUpgrade);
+                localStorage.setItem('maxSpeedUpgrade', maxSpeedUpgrade);
                 saveProgress();
                 updateBuyButtons();
             }
@@ -843,7 +1181,7 @@
             if (money >= price) {
                 money -= price;
                 moneyDisplay.textContent = money;
-                applyShield();
+                shieldUpgrade += 1;
                 shieldLevelDisplay.textContent = shieldUpgrade;
                 localStorage.setItem('shieldUpgrade', shieldUpgrade);
                 saveProgress();
@@ -864,16 +1202,47 @@
             }
         });
 
+        buyAccelerationButton.addEventListener("click", () => {
+            const price = 200 * (accelerationUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                accelerationUpgrade += 1;
+                accelerationLevelDisplay.textContent = accelerationUpgrade;
+                player.acceleration += 0.05;
+                localStorage.setItem('accelerationUpgrade', accelerationUpgrade);
+                saveProgress();
+                updateBuyButtons();
+            }
+        });
+
+        buyMaxSpeedButton.addEventListener("click", () => {
+            const price = 250 * (maxSpeedUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                maxSpeedUpgrade += 1;
+                maxSpeedLevelDisplay.textContent = maxSpeedUpgrade;
+                player.maxSpeed += 1;
+                localStorage.setItem('maxSpeedUpgrade', maxSpeedUpgrade);
+                saveProgress();
+                updateBuyButtons();
+            }
+        });
+
         // Upgrade Purchase Handlers in Main UI Panel
         upgradeSpeedMain.addEventListener("click", () => {
             const price = 50 * (speedUpgrade + 1); // Scalable pricing
             if (money >= price) {
                 money -= price;
                 moneyDisplay.textContent = money;
-                player.speed = Math.min(player.speed + 1, player.maxSpeed); // Increase speed with cap
                 speedUpgrade += 1;
                 speedLevelDisplay.textContent = speedUpgrade;
+                player.baseSpeed += 0.5;
+                player.maxSpeed += 0.5;
+                player.speed = player.baseSpeed;
                 localStorage.setItem('speedUpgrade', speedUpgrade);
+                localStorage.setItem('maxSpeedUpgrade', maxSpeedUpgrade);
                 saveProgress();
                 updateBuyButtons();
             }
@@ -884,7 +1253,7 @@
             if (money >= price) {
                 money -= price;
                 moneyDisplay.textContent = money;
-                applyShield();
+                shieldUpgrade += 1;
                 shieldLevelDisplay.textContent = shieldUpgrade;
                 localStorage.setItem('shieldUpgrade', shieldUpgrade);
                 saveProgress();
@@ -905,21 +1274,49 @@
             }
         });
 
-        // Keyboard Controls for Movement and Pause
+        buyAccelerationMain.addEventListener("click", () => {
+            const price = 200 * (accelerationUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                accelerationUpgrade += 1;
+                accelerationLevelDisplay.textContent = accelerationUpgrade;
+                player.acceleration += 0.05;
+                localStorage.setItem('accelerationUpgrade', accelerationUpgrade);
+                saveProgress();
+                updateBuyButtons();
+            }
+        });
+
+        buyMaxSpeedMain.addEventListener("click", () => {
+            const price = 250 * (maxSpeedUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                maxSpeedUpgrade += 1;
+                maxSpeedLevelDisplay.textContent = maxSpeedUpgrade;
+                player.maxSpeed += 1;
+                localStorage.setItem('maxSpeedUpgrade', maxSpeedUpgrade);
+                saveProgress();
+                updateBuyButtons();
+            }
+        });
+
+        // Keyboard Controls for Movement and Dash
         document.addEventListener("keydown", e => {
             const key = e.key.toLowerCase();
             keys[key] = true;
             if (key === "escape") {
-                gamePaused = !gamePaused;
-                if (gamePaused) {
-                    showMenu(true);
-                    stopSpawning();
-                    bgMusic.pause();
+                togglePause();
+            }
+            if (key === "space") {
+                if (shield.canActivate) {
+                    activateShield();
                 } else {
-                    menu.classList.remove("active");
-                    gameLoop();
-                    startSpawning();
-                    bgMusic.play();
+                    // Optionally, allow toggling shield if already active
+                    if (shield.active && shieldUpgrade >= 50) {
+                        shield.active = false;
+                    }
                 }
             }
         });
@@ -929,20 +1326,232 @@
             keys[key] = false;
         });
 
-        // Restart Game on Space or Enter after Game Over
+        // Dash Functionality
         document.addEventListener("keydown", e => {
-            if (gameOver && [" ", "enter"].includes(e.key.toLowerCase())) {
-                resetGame();
+            const key = e.key.toLowerCase();
+            if (key === "w" && player.canDash) {
+                player.x = Math.max(0, player.x - player.dashSpeed);
+                player.canDash = false;
+                setTimeout(() => { player.canDash = true; }, 1000); // 1 second cooldown
+            }
+            if (key === "s" && player.canDash) {
+                player.x = Math.min(canvas.width - player.width, player.x + player.dashSpeed);
+                player.canDash = false;
+                setTimeout(() => { player.canDash = true; }, 1000); // 1 second cooldown
+            }
+        });
+
+        // Toggle Pause Function
+        function togglePause() {
+            gamePaused = !gamePaused;
+            if (gamePaused) {
+                showMenu(true);
+                stopSpawning();
+                bgMusic.pause();
+            } else {
                 menu.classList.remove("active");
-                gamePaused = false;
-                gameLoop();
+                gameLoop(performance.now());
                 startSpawning();
                 bgMusic.play();
+            }
+        }
+
+        // Event Listener for Pause Button
+        pauseButton.addEventListener("click", () => {
+            togglePause();
+        });
+
+        // Event Listener for Help Button
+        helpButton.addEventListener("click", () => {
+            helpMenu.classList.add("active");
+        });
+
+        closeHelpButton.addEventListener("click", () => {
+            helpMenu.classList.remove("active");
+        });
+
+        // Event Listener for Settings Button
+        settingsButton.addEventListener("click", () => {
+            settingsMenu.classList.add("active");
+        });
+
+        closeSettingsButton.addEventListener("click", () => {
+            settingsMenu.classList.remove("active");
+        });
+
+        // Upgrade Purchase Handlers in Settings
+        buyAccelerationButton.addEventListener("click", () => {
+            const price = 200 * (accelerationUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                accelerationUpgrade += 1;
+                accelerationLevelDisplay.textContent = accelerationUpgrade;
+                player.acceleration += 0.05;
+                localStorage.setItem('accelerationUpgrade', accelerationUpgrade);
+                saveProgress();
+                updateBuyButtons();
+            }
+        });
+
+        buyMaxSpeedButton.addEventListener("click", () => {
+            const price = 250 * (maxSpeedUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                maxSpeedUpgrade += 1;
+                maxSpeedLevelDisplay.textContent = maxSpeedUpgrade;
+                player.maxSpeed += 1;
+                localStorage.setItem('maxSpeedUpgrade', maxSpeedUpgrade);
+                saveProgress();
+                updateBuyButtons();
+            }
+        });
+
+        // Upgrade Purchase Handlers in Settings
+        upgradeSpeedButton.addEventListener("click", () => {
+            const price = 50 * (speedUpgrade + 1); // Scalable pricing
+            if (money >= price) {
+                money -= price;
+                moneyDisplay.textContent = money;
+                speedUpgrade += 1;
+                speedLevelDisplay.textContent = speedUpgrade;
+                player.baseSpeed += 0.5;
+                player.maxSpeed += 0.5;
+                player.speed = player.baseSpeed;
+                localStorage.setItem('speedUpgrade', speedUpgrade);
+                localStorage.setItem('maxSpeedUpgrade', maxSpeedUpgrade);
+                saveProgress();
+                updateBuyButtons();
+            }
+        });
+
+        // Settings Controls
+        musicVolume.addEventListener("input", () => {
+            bgMusic.volume = musicVolume.value;
+        });
+
+        sfxVolume.addEventListener("input", () => {
+            collectSound.volume = sfxVolume.value;
+            collisionSound.volume = sfxVolume.value;
+            shieldSound.volume = sfxVolume.value;
+            bombExplosionSound.volume = sfxVolume.value;
+        });
+
+        frameRateSelect.addEventListener("change", () => {
+            targetFPS = parseInt(frameRateSelect.value);
+            frameDuration = 1000 / targetFPS;
+            saveProgress();
+        });
+
+        themeToggle.addEventListener("change", () => {
+            const selectedTheme = themeToggle.value;
+            if (selectedTheme === "light") {
+                document.body.classList.add("light");
+                document.body.classList.remove("dark");
+            } else {
+                document.body.classList.add("dark");
+                document.body.classList.remove("light");
+            }
+            saveProgress();
+        });
+
+        // Save Game Immediately
+        saveGameButton.addEventListener("click", () => {
+            saveProgress();
+            alert("Game Saved Successfully!");
+        });
+
+        // Reset Data with Confirmation
+        resetDataButton.addEventListener("click", () => {
+            if (confirm("Are you sure you want to reset all game data? This action cannot be undone.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
+
+        // Update Buy Buttons Based on Current Money
+        function updateBuyButtons() {
+            const speedPrice = 50 * (speedUpgrade + 1);
+            const shieldPrice = 100 * (shieldUpgrade + 1);
+            const doubleMoneyPrice = 150 * (doubleMoneyUpgrade + 1);
+            const accelerationPrice = 200 * (accelerationUpgrade + 1);
+            const maxSpeedPrice = 250 * (maxSpeedUpgrade + 1);
+
+            // Shop Buttons
+            upgradeSpeedButton.textContent = `Buy ($${speedPrice})`;
+            buyShieldButton.textContent = `Buy ($${shieldPrice})`;
+            buyDoubleMoneyButton.textContent = `Buy ($${doubleMoneyPrice})`;
+            buyAccelerationButton.textContent = `Buy ($${accelerationPrice})`;
+            buyMaxSpeedButton.textContent = `Buy ($${maxSpeedPrice})`;
+
+            // Main UI Buttons
+            upgradeSpeedMain.textContent = `Buy ($${speedPrice})`;
+            buyShieldMain.textContent = `Buy ($${shieldPrice})`;
+            buyDoubleMoneyMain.textContent = `Buy ($${doubleMoneyPrice})`;
+            buyAccelerationMain.textContent = `Buy ($${accelerationPrice})`;
+            buyMaxSpeedMain.textContent = `Buy ($${maxSpeedPrice})`;
+
+            // Settings Buttons
+            const settingsButtons = [upgradeSpeedButton, buyShieldButton, buyDoubleMoneyButton, buyAccelerationButton, buyMaxSpeedButton];
+            const mainButtons = [upgradeSpeedMain, buyShieldMain, buyDoubleMoneyMain, buyAccelerationMain, buyMaxSpeedMain];
+            const allButtons = [...settingsButtons, ...mainButtons];
+
+            // Enable or Disable Buttons Based on Money and Apply Styles
+            allButtons.forEach(button => {
+                const price = parseInt(button.textContent.match(/\$(\d+)/)[1]);
+                if (money >= price) {
+                    button.disabled = false;
+                    button.classList.add("upgrade-available");
+                    button.classList.remove("upgrade-unavailable");
+                } else {
+                    button.disabled = true;
+                    button.classList.remove("upgrade-available");
+                    button.classList.add("upgrade-unavailable");
+                }
+            });
+        }
+
+        // Explode Bomb Function
+        function explodeBomb(bomb) {
+            // Split all obstacles, stars, and bombs on screen
+            obstacles.forEach(obstacle => {
+                if (obstacle.type === 'fire' || obstacle.type === 'bomb') {
+                    // Split obstacles into two smaller ones
+                    const newSpeed = obstacle.speed;
+                    const newX1 = obstacle.x - 10 > 0 ? obstacle.x - 10 : obstacle.x;
+                    const newX2 = obstacle.x + 10 < canvas.width - obstacle.width ? obstacle.x + 10 : obstacle.x;
+                    obstacles.push({ x: newX1, y: -40, width: 40, height: 40, emoji: '🔥', speed: newSpeed, type: 'fire' });
+                    obstacles.push({ x: newX2, y: -40, width: 40, height: 40, emoji: '🔥', speed: newSpeed, type: 'fire' });
+                }
+            });
+
+            stars.forEach((star, index) => {
+                stars.splice(index, 1); // Remove all stars
+            });
+        }
+
+        // Handle Tab Switching and Window Focus
+        window.addEventListener('blur', () => {
+            if (!gameOver) {
+                togglePause();
+            }
+        });
+
+        // Prevent accidental tab closure with confirmation
+        window.addEventListener('beforeunload', function (e) {
+            if (!gameOver && !gamePaused) {
+                e.preventDefault();
+                e.returnValue = '';
             }
         });
 
         // Initialize Background Music Settings
         bgMusic.volume = 0.3; // Adjust volume as needed
+        collectSound.volume = 0.5;
+        collisionSound.volume = 0.5;
+        shieldSound.volume = 0.5;
+        bombExplosionSound.volume = 0.5;
 
         // Start Background Music When Game Starts
         startButton?.addEventListener("click", () => {
@@ -967,117 +1576,32 @@
 
         // Touch Controls for Mobile Devices
         let touchStartX = null;
-        let touchStartY = null;
 
         canvas.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
             touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
         });
 
         canvas.addEventListener('touchmove', (e) => {
-            if (!touchStartX || !touchStartY) return;
+            if (!touchStartX) return;
             const touch = e.touches[0];
             const deltaX = touch.clientX - touchStartX;
-            const deltaY = touch.clientY - touchStartY;
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                if (deltaX > 20) {
-                    keys["arrowright"] = true;
-                    keys["arrowleft"] = false;
-                } else if (deltaX < -20) {
-                    keys["arrowleft"] = true;
-                    keys["arrowright"] = false;
-                }
-            } else {
-                if (deltaY > 20) {
-                    keys["arrowdown"] = true;
-                    keys["arrowup"] = false;
-                } else if (deltaY < -20) {
-                    keys["arrowup"] = true;
-                    keys["arrowdown"] = false;
-                }
+            if (deltaX > 20) {
+                keys["arrowright"] = true;
+                keys["arrowleft"] = false;
+            } else if (deltaX < -20) {
+                keys["arrowleft"] = true;
+                keys["arrowright"] = false;
             }
         });
 
         canvas.addEventListener('touchend', () => {
             keys["arrowleft"] = false;
             keys["arrowright"] = false;
-            keys["arrowup"] = false;
-            keys["arrowdown"] = false;
             touchStartX = null;
-            touchStartY = null;
         });
 
-        // Update Buy Buttons Based on Current Money
-        function updateBuyButtons() {
-            const speedPrice = 50 * (speedUpgrade + 1);
-            const shieldPrice = 100 * (shieldUpgrade + 1);
-            const doubleMoneyPrice = 150 * (doubleMoneyUpgrade + 1);
-
-            // Shop Buttons
-            upgradeSpeedButton.textContent = `Buy ($${speedPrice})`;
-            buyShieldButton.textContent = `Buy ($${shieldPrice})`;
-            buyDoubleMoneyButton.textContent = `Buy ($${doubleMoneyPrice})`;
-
-            // Main UI Buttons
-            upgradeSpeedMain.textContent = `Buy ($${speedPrice})`;
-            buyShieldMain.textContent = `Buy ($${shieldPrice})`;
-            buyDoubleMoneyMain.textContent = `Buy ($${doubleMoneyPrice})`;
-
-            // Enable or Disable Buttons Based on Money
-            if (money >= speedPrice) {
-                upgradeSpeedButton.disabled = false;
-                upgradeSpeedMain.disabled = false;
-                upgradeSpeedButton.classList.add("upgrade-available");
-                upgradeSpeedButton.classList.remove("upgrade-unavailable");
-                upgradeSpeedMain.classList.add("upgrade-available");
-                upgradeSpeedMain.classList.remove("upgrade-unavailable");
-            } else {
-                upgradeSpeedButton.disabled = true;
-                upgradeSpeedMain.disabled = true;
-                upgradeSpeedButton.classList.remove("upgrade-available");
-                upgradeSpeedButton.classList.add("upgrade-unavailable");
-                upgradeSpeedMain.classList.remove("upgrade-available");
-                upgradeSpeedMain.classList.add("upgrade-unavailable");
-            }
-
-            if (money >= shieldPrice) {
-                buyShieldButton.disabled = false;
-                buyShieldMain.disabled = false;
-                buyShieldButton.classList.add("upgrade-available");
-                buyShieldButton.classList.remove("upgrade-unavailable");
-                buyShieldMain.classList.add("upgrade-available");
-                buyShieldMain.classList.remove("upgrade-unavailable");
-            } else {
-                buyShieldButton.disabled = true;
-                buyShieldMain.disabled = true;
-                buyShieldButton.classList.remove("upgrade-available");
-                buyShieldButton.classList.add("upgrade-unavailable");
-                buyShieldMain.classList.remove("upgrade-available");
-                buyShieldMain.classList.add("upgrade-unavailable");
-            }
-
-            if (money >= doubleMoneyPrice) {
-                buyDoubleMoneyButton.disabled = false;
-                buyDoubleMoneyMain.disabled = false;
-                buyDoubleMoneyButton.classList.add("upgrade-available");
-                buyDoubleMoneyButton.classList.remove("upgrade-unavailable");
-                buyDoubleMoneyMain.classList.add("upgrade-available");
-                buyDoubleMoneyMain.classList.remove("upgrade-unavailable");
-            } else {
-                buyDoubleMoneyButton.disabled = true;
-                buyDoubleMoneyMain.disabled = true;
-                buyDoubleMoneyButton.classList.remove("upgrade-available");
-                buyDoubleMoneyButton.classList.add("upgrade-unavailable");
-                buyDoubleMoneyMain.classList.remove("upgrade-available");
-                buyDoubleMoneyMain.classList.add("upgrade-unavailable");
-            }
-        }
-
-        // Initial Update of Buy Buttons
-        updateBuyButtons();
-
-        // Call updateBuyButtons whenever money changes
+        // Update Buy Buttons on Money Change
         function updateMoney(amount) {
             money += amount;
             moneyDisplay.textContent = money;
@@ -1085,12 +1609,9 @@
             saveProgress();
         }
 
-        // Override the money setter to call updateBuyButtons (optional advanced implementation)
-        // Not necessary since updateMoney is being used consistently
-
         // Handle Upgrade Effects
         function handleUpgradeEffects() {
-            // Currently, speed is handled during purchase
+            // Currently, speed and max speed are handled during purchase
             // Double Money is handled during collection
             // Shield is handled during activation
             // Add more effects as needed
@@ -1098,7 +1619,6 @@
 
         // Initialize Game
         resetGame();
-        showMenu(false);
 
         // Start Spawning Obstacles and Stars when Game Starts
         function startGame() {
@@ -1106,7 +1626,7 @@
             menu.classList.remove("active");
             gamePaused = false;
             gameOver = false;
-            gameLoop();
+            gameLoop(performance.now());
             startSpawning();
             bgMusic.play();
         }
@@ -1124,10 +1644,78 @@
         });
 
         // Listen for any change in money to update UI
-        const moneyObserver = new MutationObserver(() => {
-            updateBuyButtons();
-        });
-        moneyObserver.observe(moneyDisplay, { childList: true });
+        // Removed MutationObserver as it's unnecessary
+
+        // Initial Update of Buy Buttons
+        updateBuyButtons();
+
+        // Visual Indicators for Shield Cooldown and Duration
+        function drawHUD() {
+            if (shield.active) {
+                ctx.fillStyle = "white";
+                ctx.font = "14px Arial";
+                ctx.fillText(`Shield Active: ${(shield.duration / 1000).toFixed(1)}s`, shield.x + shield.width + 10, shield.y + 20);
+            } else {
+                if (!shield.canActivate) {
+                    ctx.fillStyle = "white";
+                    ctx.font = "14px Arial";
+                    ctx.fillText(`Shield Cooldown: ${(shield.cooldown / 1000).toFixed(1)}s`, shield.x + shield.width + 10, shield.y + 20);
+                } else {
+                    ctx.fillStyle = "white";
+                    ctx.font = "14px Arial";
+                    ctx.fillText(`Shield Ready`, shield.x + shield.width + 10, shield.y + 20);
+                }
+            }
+        }
+
+        // Draw HUD after game elements
+        function gameLoop(currentTime) {
+            if (gamePaused || gameOver) return;
+
+            const deltaTime = currentTime - lastFrameTime;
+            if (deltaTime < frameDuration) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+                return;
+            }
+            lastFrameTime = currentTime;
+
+            movePlayer();
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawShield();
+            drawPlayer();
+            drawObstacles();
+            drawStars();
+            drawHUD();
+
+            moveObstacles();
+            moveStars();
+            checkCollisions();
+
+            handleShields(deltaTime);
+
+            // Increase difficulty based on score
+            increaseDifficulty();
+
+            if (gameOver) {
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                    highScoreDisplay.textContent = highScore;
+                }
+                menu.classList.add("active");
+                bgMusic.pause();
+                stopSpawning();
+                saveProgress();
+                return;
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Implement FPS Control (Optional Advanced Feature)
+        // Not fully implemented due to complexity
 
     </script>
 </body>
